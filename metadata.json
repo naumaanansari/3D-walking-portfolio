@@ -1,0 +1,6 @@
+{
+  "name": "Walking Office Portfolio — Nauman Ansari",
+  "description": "Interactive, browser-based stylized isometric 3D office exploration portfolio for Nauman Ansari.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
