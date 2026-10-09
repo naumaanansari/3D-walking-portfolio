@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOffice } from '../../context/OfficeContext';
 import { SKILL_DEPARTMENTS } from '../../data/portfolioData';
 import { Department } from '../../types/office';
@@ -13,6 +13,7 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
+import { CharacterPortrait } from './CharacterPortrait';
 
 const DEPARTMENT_ICONS: Record<string, React.FC<{ className?: string }>> = {
   Briefcase: Briefcase,
@@ -26,25 +27,44 @@ export const SkillsModal: React.FC = () => {
   const {
     currentScene,
     isTransitioning,
+    activeModal,
     selectedDepartment,
     openDepartmentDetail,
     closeActiveModal,
     returnToReception,
   } = useOffice();
 
-  if (currentScene !== 'skills' || isTransitioning) {
+  const [isSpeaking, setIsSpeaking] = useState(true);
+
+  useEffect(() => {
+    if (selectedDepartment) {
+      setIsSpeaking(true);
+      const timer = setTimeout(() => setIsSpeaking(false), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedDepartment]);
+
+  if (currentScene !== 'skills' || isTransitioning || !activeModal) {
     return null;
   }
 
   // CHILD MODAL: Department Detailed-View Placeholder Panel
   if (selectedDepartment) {
     const IconComponent = DEPARTMENT_ICONS[selectedDepartment.iconName] || Layers;
+    const avatarType =
+      selectedDepartment.id === 'ux'
+        ? 'designer'
+        : selectedDepartment.id === 'ba'
+        ? 'analyst'
+        : 'dev';
 
     return (
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="dept-detail-title"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm select-none"
       >
         <div className="w-full max-w-lg bg-[#FDFCF9] border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 relative animate-in fade-in zoom-in-95 duration-200">
@@ -56,18 +76,19 @@ export const SkillsModal: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
 
-          <div className="flex items-center gap-3.5 mb-5">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#4D6B53]/10 text-[#2D4532]"
-            >
-              <IconComponent className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 id="dept-detail-title" className="text-lg font-bold text-stone-900 tracking-tight">
-                {selectedDepartment.name}
-              </h3>
-              <p className="text-xs text-stone-500">Department Workstation Overview</p>
-            </div>
+          {/* Talking Specialist Character Portrait */}
+          <CharacterPortrait
+            avatarType={avatarType}
+            name={`${selectedDepartment.shortName} Specialist`}
+            role={`${selectedDepartment.name} Station`}
+            isSpeaking={isSpeaking}
+          />
+
+          <div className="my-4">
+            <h3 id="dept-detail-title" className="text-lg font-bold text-stone-900 tracking-tight">
+              {selectedDepartment.name}
+            </h3>
+            <p className="text-xs text-stone-500">Department Workstation Overview</p>
           </div>
 
           <p className="text-sm text-stone-700 leading-relaxed mb-6">
@@ -113,12 +134,14 @@ export const SkillsModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-labelledby="skills-hub-title"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
       className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-stone-900/30 backdrop-blur-xs select-none"
     >
-      <div className="w-full max-w-3xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-3xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         <button
-          onClick={returnToReception}
-          aria-label="Close skills view and return to reception"
+          onClick={closeActiveModal}
+          aria-label="Close skills view"
           className="absolute top-5 right-5 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
@@ -169,7 +192,12 @@ export const SkillsModal: React.FC = () => {
 
         {/* Footer */}
         <div className="mt-8 pt-4 border-t border-[#EBE3D7] flex items-center justify-between text-xs text-stone-500">
-          <span>Click any 3D workstation or card to inspect</span>
+          <button
+            onClick={closeActiveModal}
+            className="px-4 py-2 text-xs font-semibold text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl transition-colors cursor-pointer"
+          >
+            Close & Explore Room
+          </button>
           <button
             onClick={returnToReception}
             className="px-4 py-2 text-xs font-semibold text-white bg-[#4D6B53] hover:bg-[#3E5843] rounded-xl transition-colors cursor-pointer shadow-xs"

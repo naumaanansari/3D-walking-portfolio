@@ -99,6 +99,13 @@ export const SurpriseBox3D: React.FC<{
             navigateTo('surprise');
           }
         }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
       >
         {/* Purple Gift Box Body */}
         <mesh castShadow receiveShadow>
@@ -163,8 +170,8 @@ export const SurpriseBox3D: React.FC<{
       </group>
 
       {/* Surrounding Decorative Foliage in Terracotta Pots */}
-      <ArchitecturalPlant position={[-1.6, 0, 0.8]} scale={0.9} planterType="terracotta" />
-      <ArchitecturalPlant position={[1.7, 0, -0.6]} scale={1.05} planterType="brass" />
+      <ArchitecturalPlant position={[-1.6, 0, 0.8]} scale={0.9} planterType="terracotta" plantType="monstera" />
+      <ArchitecturalPlant position={[1.7, 0, -0.6]} scale={1.05} planterType="brass" plantType="snake" />
     </group>
   );
 };

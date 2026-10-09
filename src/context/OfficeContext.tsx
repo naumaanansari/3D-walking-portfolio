@@ -7,7 +7,12 @@ import {
   OtherProject,
   SceneId,
 } from '../types/office';
-import { SKILL_DEPARTMENTS } from '../data/portfolioData';
+
+export interface DialogueSpeaker {
+  name: string;
+  role: string;
+  avatarType: 'receptionist' | 'hr' | 'nauman' | 'analyst' | 'dev' | 'designer' | 'qa';
+}
 
 interface OfficeContextType {
   currentScene: SceneId;
@@ -22,8 +27,9 @@ interface OfficeContextType {
   selectedProject: MajorProject | OtherProject | null;
   selectedCertificate: Certificate | null;
   selectedFeedback: FeedbackItem | null;
-  minimapExpanded: boolean;
+  minimapCollapsed: boolean;
   soundEnabled: boolean;
+  activeSpeaker: DialogueSpeaker | null;
   
   // Actions
   setVisitorName: (name: string) => void;
@@ -33,6 +39,7 @@ interface OfficeContextType {
   skipAnimation: () => void;
   returnToReception: () => void;
   closeActiveModal: () => void;
+  reopenSceneModal: () => void;
   openDepartmentDetail: (dept: Department) => void;
   openProjectDetail: (project: MajorProject | OtherProject) => void;
   openCertificateDetail: (cert: Certificate) => void;
@@ -77,8 +84,41 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [selectedProject, setSelectedProject] = useState<MajorProject | OtherProject | null>(null);
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null);
-  const [minimapExpanded, setMinimapExpanded] = useState<boolean>(false);
+  const [minimapCollapsed, setMinimapCollapsed] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+  // Active dialogue speaker tracking
+  const activeSpeaker: DialogueSpeaker | null = (() => {
+    if (currentScene === 'reception' && activeModal === 'reception-menu') {
+      return {
+        name: 'Elena',
+        role: 'Office Receptionist',
+        avatarType: 'receptionist',
+      };
+    }
+    if (currentScene === 'education' && activeModal === 'education-main') {
+      return {
+        name: 'Marcus Vance',
+        role: 'People & Talent Lead',
+        avatarType: 'hr',
+      };
+    }
+    if (currentScene === 'ceo' && activeModal === 'ceo-main') {
+      return {
+        name: 'Nauman Ansari',
+        role: 'Founder & Solutions Architect',
+        avatarType: 'nauman',
+      };
+    }
+    if (currentScene === 'skills' && selectedDepartment) {
+      return {
+        name: selectedDepartment.name,
+        role: 'Department Workstation',
+        avatarType: (selectedDepartment.id === 'ux' ? 'designer' : selectedDepartment.id === 'ba' ? 'analyst' : 'dev'),
+      };
+    }
+    return null;
+  })();
 
   const setVisitorName = useCallback((name: string) => {
     const clean = name.trim();
@@ -134,11 +174,9 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Main navigation transition
   const navigateTo = useCallback((scene: SceneId) => {
     if (isTransitioning) {
-      // Transition lock active to prevent inconsistent state
       return;
     }
     if (currentScene === scene) {
-      // Already at scene, open main view if closed
       openSceneModal(scene);
       return;
     }
@@ -201,43 +239,46 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setActiveModal('reception-menu');
   }, []);
 
-  // Hierarchical parent-child modal close handling
+  // Re-open current scene modal if closed for 3D exploration
+  const reopenSceneModal = useCallback(() => {
+    openSceneModal(currentScene);
+  }, [currentScene, openSceneModal]);
+
+  // Hierarchical parent-child modal close handling (Preserves 3D room location!)
   const closeActiveModal = useCallback(() => {
+    // 1. Child modal: Department detail returns to Skills main
     if (selectedDepartment) {
       setSelectedDepartment(null);
       setActiveModal('skills-main');
       return;
     }
+    // 2. Child modal: Project detail returns to Career main
     if (selectedProject) {
       setSelectedProject(null);
       setActiveModal('career-main');
       return;
     }
+    // 3. Child modal: Certificate detail returns to Career main
     if (selectedCertificate) {
       setSelectedCertificate(null);
       setActiveModal('career-main');
       return;
     }
+    // 4. Child modal: Feedback detail returns to Feedback main
     if (selectedFeedback) {
       setSelectedFeedback(null);
       setActiveModal('feedback-main');
       return;
     }
 
-    // If closing a primary scene modal, return to reception
-    if (currentScene !== 'reception') {
-      returnToReception();
-    } else {
-      // At reception, keep reception menu visible or allow closing/re-opening
-      setActiveModal('reception-menu');
-    }
+    // 5. Parent modal: Closing parent modal dismisses overlay to let user look around 3D scene!
+    // Does NOT abruptly jerk the camera back to reception!
+    setActiveModal(null);
   }, [
     selectedDepartment,
     selectedProject,
     selectedCertificate,
     selectedFeedback,
-    currentScene,
-    returnToReception,
   ]);
 
   const openDepartmentDetail = useCallback((dept: Department) => {
@@ -261,27 +302,27 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const toggleMinimap = useCallback(() => {
-    setMinimapExpanded(prev => !prev);
+    setMinimapCollapsed(prev => !prev);
   }, []);
 
   const toggleSound = useCallback(() => {
     setSoundEnabled(prev => !prev);
   }, []);
 
-  // Keyboard shortcut: Escape to close eligible modal
+  // Keyboard shortcut: Escape to close eligible modal hierarchy
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (selectedDepartment || selectedProject || selectedCertificate || selectedFeedback) {
           closeActiveModal();
-        } else if (currentScene !== 'reception' && activeModal) {
-          returnToReception();
+        } else if (activeModal) {
+          setActiveModal(null);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedDepartment, selectedProject, selectedCertificate, selectedFeedback, currentScene, activeModal, closeActiveModal, returnToReception]);
+  }, [selectedDepartment, selectedProject, selectedCertificate, selectedFeedback, activeModal, closeActiveModal]);
 
   return (
     <OfficeContext.Provider
@@ -298,8 +339,9 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         selectedProject,
         selectedCertificate,
         selectedFeedback,
-        minimapExpanded,
+        minimapCollapsed,
         soundEnabled,
+        activeSpeaker,
         setVisitorName,
         setNamePromptState,
         clearVisitorName,
@@ -307,6 +349,7 @@ export const OfficeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         skipAnimation,
         returnToReception,
         closeActiveModal,
+        reopenSceneModal,
         openDepartmentDetail,
         openProjectDetail,
         openCertificateDetail,

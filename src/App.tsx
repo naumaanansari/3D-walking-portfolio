@@ -16,6 +16,7 @@ import { FeedbackModal } from './components/ui/FeedbackModal';
 import { CeoCabinModal } from './components/ui/CeoCabinModal';
 import { SurpriseModal } from './components/ui/SurpriseModal';
 import { TransitionControls } from './components/ui/TransitionControls';
+import { SceneExploreBar } from './components/ui/SceneExploreBar';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 function OfficeExperience() {
@@ -31,6 +32,9 @@ function OfficeExperience() {
 
       {/* Guided Transition Controls (Skip Animation) */}
       <TransitionControls />
+
+      {/* On-screen Scene Exploration Bar when modal is closed */}
+      <SceneExploreBar />
 
       {/* Scene 1: Welcome & Reception Dialogue */}
       <ReceptionDialogue />

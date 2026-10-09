@@ -18,6 +18,7 @@ export const CareerModal: React.FC = () => {
   const {
     currentScene,
     isTransitioning,
+    activeModal,
     selectedProject,
     selectedCertificate,
     openProjectDetail,
@@ -26,7 +27,7 @@ export const CareerModal: React.FC = () => {
     returnToReception,
   } = useOffice();
 
-  if (currentScene !== 'career' || isTransitioning) {
+  if (currentScene !== 'career' || isTransitioning || !activeModal) {
     return null;
   }
 
@@ -41,9 +42,11 @@ export const CareerModal: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="project-detail-title"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm select-none"
       >
-        <div className="w-full max-w-2xl bg-[#FDFCF9] border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-full max-w-2xl bg-[#FDFCF9] border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
           <button
             onClick={closeActiveModal}
             aria-label="Close project details"
@@ -157,6 +160,8 @@ export const CareerModal: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="cert-detail-title"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm select-none"
       >
         <div className="w-full max-w-lg bg-[#FDFCF9] border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 relative animate-in fade-in zoom-in-95 duration-200">
@@ -240,12 +245,14 @@ export const CareerModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-labelledby="career-gallery-title"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
       className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-stone-900/30 backdrop-blur-xs select-none"
     >
-      <div className="w-full max-w-4xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-4xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         <button
-          onClick={returnToReception}
-          aria-label="Close career gallery and return to reception"
+          onClick={closeActiveModal}
+          aria-label="Close career gallery"
           className="absolute top-5 right-5 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
@@ -373,7 +380,12 @@ export const CareerModal: React.FC = () => {
 
         {/* Footer Navigation */}
         <div className="mt-8 pt-4 border-t border-[#EBE3D7] flex items-center justify-between">
-          <span className="text-xs text-stone-500">Click any trophy or certificate to inspect details</span>
+          <button
+            onClick={closeActiveModal}
+            className="px-4 py-2 text-xs font-semibold text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl transition-colors cursor-pointer"
+          >
+            Close & View Shelves
+          </button>
           <button
             onClick={returnToReception}
             className="px-4 py-2 text-xs font-semibold text-white bg-[#4D6B53] hover:bg-[#3E5843] rounded-xl transition-colors cursor-pointer shadow-xs"

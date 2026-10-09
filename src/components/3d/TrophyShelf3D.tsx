@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { MAJOR_PROJECTS, OTHER_PROJECTS, CERTIFICATES, CAREER_KPIS } from '../../data/portfolioData';
+import { MAJOR_PROJECTS, OTHER_PROJECTS, CERTIFICATES } from '../../data/portfolioData';
 import { useOffice } from '../../context/OfficeContext';
+import { Certificate } from '../../types/office';
+import { createDiplomaTexture, createSignTexture } from '../../utils/textureGenerator';
 
 // Stylized Golden Trophy Model matching reference image
 const TrophyMesh: React.FC<{
@@ -32,9 +34,13 @@ const TrophyMesh: React.FC<{
       }}
       onPointerOver={(e) => {
         e.stopPropagation();
+        document.body.style.cursor = 'pointer';
         onPointerOver();
       }}
-      onPointerOut={onPointerOut}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+        onPointerOut();
+      }}
     >
       {/* Heavy Wood / Brass Base */}
       <mesh position={[0, 0.06, 0]} castShadow>
@@ -70,14 +76,20 @@ const TrophyMesh: React.FC<{
   );
 };
 
-// Framed Certificate Model
+// Framed Certificate Model with realistic diploma texture
 const FramedCertificateMesh: React.FC<{
   position: [number, number, number];
+  cert: Certificate;
   isHovered?: boolean;
   onClick: () => void;
   onPointerOver: () => void;
   onPointerOut: () => void;
-}> = ({ position, isHovered = false, onClick, onPointerOver, onPointerOut }) => {
+}> = ({ position, cert, isHovered = false, onClick, onPointerOver, onPointerOut }) => {
+  const diplomaTex = useMemo(
+    () => createDiplomaTexture(cert.name, cert.issuingOrg, cert.issueDate || '2023'),
+    [cert]
+  );
+
   return (
     <group
       position={position}
@@ -88,29 +100,23 @@ const FramedCertificateMesh: React.FC<{
       }}
       onPointerOver={(e) => {
         e.stopPropagation();
+        document.body.style.cursor = 'pointer';
         onPointerOver();
       }}
-      onPointerOut={onPointerOut}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+        onPointerOut();
+      }}
     >
       {/* Warm Oak Frame */}
       <mesh position={[0, 0.22, 0]} rotation={[-0.12, 0, 0]} castShadow>
         <boxGeometry args={[0.44, 0.34, 0.03]} />
         <meshStandardMaterial color="#8B5A2B" roughness={0.4} />
       </mesh>
-      {/* Parchment Inner */}
+      {/* Parchment Inner with Diploma Graphic */}
       <mesh position={[0, 0.22, 0.02]} rotation={[-0.12, 0, 0]}>
         <planeGeometry args={[0.38, 0.28]} />
-        <meshStandardMaterial
-          color="#FAF8F5"
-          roughness={0.8}
-          emissive={isHovered ? '#86EFAC' : '#000000'}
-          emissiveIntensity={isHovered ? 0.3 : 0}
-        />
-      </mesh>
-      {/* Gold Seal */}
-      <mesh position={[0.11, 0.14, 0.022]} rotation={[-0.12, 0, 0]}>
-        <circleGeometry args={[0.038, 16]} />
-        <meshStandardMaterial color="#EAB308" metalness={0.8} roughness={0.3} />
+        <meshBasicMaterial map={diplomaTex} />
       </mesh>
     </group>
   );
@@ -122,8 +128,23 @@ export const TrophyShelf3D: React.FC<{
   const { openProjectDetail, openCertificateDetail } = useOffice();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  const signTex = useMemo(
+    () => createSignTexture('CAREER TROPHIES & HONORS', 'Key Deliveries · Click Trophy', '#FAF8F5', '#1E293B', '#D97706'),
+    []
+  );
+
   return (
     <group position={position}>
+      {/* Overhead Warm Spot Light illuminating the showcase */}
+      <spotLight
+        position={[0, 4.2, 1.2]}
+        target-position={[0, 2.0, 0.1]}
+        intensity={1.8}
+        angle={0.65}
+        penumbra={0.5}
+        color="#FEF3C7"
+      />
+
       {/* Walnut Cabinet Built-in Shell */}
       {/* Back Panel */}
       <mesh position={[0, 2.0, -0.25]} castShadow receiveShadow>
@@ -145,6 +166,18 @@ export const TrophyShelf3D: React.FC<{
         <boxGeometry args={[3.64, 0.12, 0.62]} />
         <meshStandardMaterial color="#6B4226" roughness={0.4} />
       </mesh>
+      {/* Signboard Header Plaque */}
+      <group position={[0, 3.82, 0.1]}>
+        <mesh castShadow>
+          <boxGeometry args={[2.8, 0.38, 0.06]} />
+          <meshStandardMaterial color="#FAF8F5" roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0, 0.035]}>
+          <planeGeometry args={[2.7, 0.34]} />
+          <meshBasicMaterial map={signTex} />
+        </mesh>
+      </group>
+
       {/* Base Pedestal */}
       <mesh position={[0, 0.45, 0.1]} castShadow receiveShadow>
         <boxGeometry args={[3.64, 0.15, 0.62]} />
@@ -169,7 +202,7 @@ export const TrophyShelf3D: React.FC<{
         <meshStandardMaterial color="#A07248" roughness={0.3} />
       </mesh>
 
-      {/* Soft Warm LED Strip in Shelf */}
+      {/* Soft Warm LED Strips on Shelves */}
       <mesh position={[0, 3.02, 0.32]}>
         <boxGeometry args={[3.3, 0.015, 0.02]} />
         <meshBasicMaterial color="#FEF08A" />
@@ -222,6 +255,7 @@ export const TrophyShelf3D: React.FC<{
           <FramedCertificateMesh
             key={cert.id}
             position={[xPos, 1.28, 0.12]}
+            cert={cert}
             isHovered={hoveredId === cert.id}
             onClick={() => openCertificateDetail(cert)}
             onPointerOver={() => setHoveredId(cert.id)}

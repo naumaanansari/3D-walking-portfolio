@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOffice } from '../../context/OfficeContext';
 import { SceneId } from '../../types/office';
-import { MessageSquare, ArrowRight, User } from 'lucide-react';
+import { ArrowRight, User } from 'lucide-react';
+import { CharacterPortrait } from './CharacterPortrait';
 
 export const ReceptionDialogue: React.FC = () => {
   const {
@@ -12,13 +13,24 @@ export const ReceptionDialogue: React.FC = () => {
     setVisitorName,
     setNamePromptState,
     navigateTo,
+    activeModal,
   } = useOffice();
 
   const [inputName, setInputName] = useState('');
   const [errorText, setErrorText] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(true);
 
-  // Only display when at reception and not actively in a submodal
-  if (currentScene !== 'reception' || isTransitioning) {
+  // Trigger speaking animation when prompt state or dialogue changes
+  useEffect(() => {
+    setIsSpeaking(true);
+    const timer = setTimeout(() => {
+      setIsSpeaking(false);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [namePromptState, currentScene]);
+
+  // Only display when at reception and activeModal is 'reception-menu' (or not explicitly hidden)
+  if (currentScene !== 'reception' || isTransitioning || activeModal !== 'reception-menu') {
     return null;
   }
 
@@ -51,18 +63,17 @@ export const ReceptionDialogue: React.FC = () => {
   return (
     <aside
       aria-label="Receptionist dialogue panel"
-      className="fixed bottom-6 left-6 z-30 w-[calc(100vw-3rem)] max-w-lg bg-[#FDFCF9]/95 backdrop-blur-xl border border-[#E7DFD3] rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.08)] p-6 text-stone-800 select-none transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      className="fixed bottom-6 left-6 z-30 w-[calc(100vw-3rem)] max-w-lg bg-[#FDFCF9]/98 backdrop-blur-xl border border-[#E7DFD3] rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.08)] p-6 text-stone-800 select-none transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
     >
-      {/* Receptionist Header Bar */}
-      <div className="flex items-center gap-3 pb-4 border-b border-[#EBE3D7]">
-        <div className="w-10 h-10 rounded-xl bg-purple-100 border border-purple-200/80 flex items-center justify-center text-purple-700">
-          <MessageSquare className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-stone-900 tracking-tight">Elena · Office Receptionist</h2>
-          <p className="text-xs text-stone-500">Nauman Ansari Tech Studio</p>
-        </div>
-      </div>
+      {/* Animated Talking Receptionist Portrait Bust */}
+      <CharacterPortrait
+        avatarType="receptionist"
+        name="Elena"
+        role="Front Desk Receptionist"
+        isSpeaking={isSpeaking}
+      />
 
       {/* STEP 1: INITIAL NAME INQUIRY */}
       {namePromptState === 'initial' && (
@@ -79,7 +90,7 @@ export const ReceptionDialogue: React.FC = () => {
             </button>
             <button
               onClick={handleDeclineName}
-              className="flex-1 py-2.5 px-4 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 active:bg-stone-250 border border-stone-200 rounded-xl transition-colors cursor-pointer text-center"
+              className="flex-1 py-2.5 px-4 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl transition-colors cursor-pointer text-center"
             >
               No, thanks.
             </button>

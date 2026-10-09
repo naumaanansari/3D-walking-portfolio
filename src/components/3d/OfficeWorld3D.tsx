@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useOffice } from '../../context/OfficeContext';
@@ -6,14 +6,22 @@ import { StylizedCharacter } from './CharacterModel';
 import {
   CurvedReceptionDesk,
   ReceptionLoungeArea,
-  NaturalWoodDesk,
+  DetailedWorkstationDesk,
   ArchitecturalPlant,
-  SagePartition,
+  OverheadCeilingPendants,
+  PlanterDividerBox,
 } from './OfficeFurniture';
 import { TrophyShelf3D } from './TrophyShelf3D';
 import { FeedbackBoard3D } from './FeedbackBoard3D';
 import { SkillsCluster3D } from './SkillsCluster3D';
 import { SurpriseBox3D } from './SurpriseBox3D';
+import {
+  createFloorTileTexture,
+  createWoodParquetTexture,
+  createSignTexture,
+  createDiplomaTexture,
+  createScreenTexture,
+} from '../../utils/textureGenerator';
 
 export const OfficeWorld3D: React.FC = () => {
   const { currentScene, hasEnteredOffice } = useOffice();
@@ -41,21 +49,55 @@ export const OfficeWorld3D: React.FC = () => {
     }
   });
 
+  // Cached textures
+  const floorTileTex = useMemo(() => createFloorTileTexture(), []);
+  const woodParquetTex = useMemo(() => createWoodParquetTexture(), []);
+  const hrSignTex = useMemo(
+    () => createSignTexture('HR & EDUCATION', 'Academic Records & Dossier', '#FAF8F5', '#1E293B', '#9333EA'),
+    []
+  );
+  const studioBrandTex = useMemo(
+    () => createSignTexture('NAUMAN ANSARI', 'Solutions Architect · Tech Studio', '#FAF8F5', '#1E293B', '#4D6B53'),
+    []
+  );
+  const ceoSuitSignTex = useMemo(
+    () => createSignTexture('EXECUTIVE CABIN', 'Nauman Ansari · Solutions Architect', '#FAF8F5', '#1E293B', '#0F172A'),
+    []
+  );
+  const laptopScreenTex = useMemo(() => createScreenTexture('laptop'), []);
+
   return (
     <group>
       {/* =========================================================================
           1. MAIN POLISHED STONE FLOOR & CURVED INLAYS
          ========================================================================= */}
-      {/* Main Cream / Ivory Polished Floor */}
-      <mesh position={[0, -0.05, 0]} receiveShadow>
-        <boxGeometry args={[44, 0.1, 44]} />
-        <meshStandardMaterial color="#F5EFE6" roughness={0.5} metalness={0.05} />
+      {/* Exterior Garden Patio Base */}
+      <mesh position={[0, -0.15, 0]} receiveShadow>
+        <boxGeometry args={[56, 0.2, 56]} />
+        <meshStandardMaterial color="#E8E2D8" roughness={0.7} />
       </mesh>
 
-      {/* Skills Area Curved Wood Inlay Floor Boundary (from reference image) */}
+      {/* Main Cream / Ivory Polished Floor with Tile Grid Grain */}
+      <mesh position={[0, -0.04, 0]} receiveShadow>
+        <boxGeometry args={[44, 0.08, 44]} />
+        <meshStandardMaterial
+          color="#FAF7F2"
+          map={floorTileTex}
+          roughness={0.45}
+          metalness={0.05}
+        />
+      </mesh>
+
+      {/* Skills Area Curved Wood Parquet Floor Inlay (from reference image) */}
       <mesh position={[-11, 0.002, -1]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[12, 16]} />
-        <meshStandardMaterial color="#EFE7DA" roughness={0.6} />
+        <planeGeometry args={[13, 17]} />
+        <meshStandardMaterial map={woodParquetTex} roughness={0.55} />
+      </mesh>
+
+      {/* CEO Cabin Luxury Parquet Inlay */}
+      <mesh position={[13.0, 0.002, -11.0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[9, 10]} />
+        <meshStandardMaterial map={woodParquetTex} roughness={0.5} />
       </mesh>
 
       {/* =========================================================================
@@ -65,24 +107,24 @@ export const OfficeWorld3D: React.FC = () => {
       <group position={[0, 3.2, -18]}>
         {/* Upper Wall Header */}
         <mesh position={[0, 2.6, 0]} castShadow>
-          <boxGeometry args={[40, 1.2, 0.3]} />
+          <boxGeometry args={[42, 1.2, 0.3]} />
           <meshStandardMaterial color="#FAF8F5" roughness={0.6} />
         </mesh>
         {/* Window Pillars */}
-        {[-16, -8, 0, 8, 16].map((x) => (
+        {[-18, -12, -6, 0, 6, 12, 18].map((x) => (
           <mesh key={x} position={[x, 0, 0]} castShadow>
-            <boxGeometry args={[0.5, 4.4, 0.28]} />
+            <boxGeometry args={[0.45, 4.4, 0.28]} />
             <meshStandardMaterial color="#FAF8F5" roughness={0.5} />
           </mesh>
         ))}
         {/* Exterior Sunlit Foliage & Skyline Backdrop behind glass */}
         <mesh position={[0, 0, -0.6]}>
-          <planeGeometry args={[42, 6]} />
+          <planeGeometry args={[44, 6]} />
           <meshBasicMaterial color="#C5E2CE" />
         </mesh>
         {/* Glass Panes */}
         <mesh position={[0, 0, -0.05]}>
-          <planeGeometry args={[38, 4.2]} />
+          <planeGeometry args={[40, 4.2]} />
           <meshPhysicalMaterial
             color="#E0F2FE"
             transmission={0.9}
@@ -96,12 +138,19 @@ export const OfficeWorld3D: React.FC = () => {
       {/* East Wall with Large Windows (behind CEO Cabin & Surprise Area) */}
       <group position={[20, 3.2, 0]}>
         <mesh position={[0, 2.6, 0]} castShadow>
-          <boxGeometry args={[0.3, 1.2, 38]} />
+          <boxGeometry args={[0.3, 1.2, 40]} />
           <meshStandardMaterial color="#FAF8F5" roughness={0.6} />
         </mesh>
+        {/* East Window Pillars */}
+        {[-14, -7, 0, 7, 14].map((z) => (
+          <mesh key={z} position={[0, 0, z]} castShadow>
+            <boxGeometry args={[0.28, 4.4, 0.45]} />
+            <meshStandardMaterial color="#FAF8F5" roughness={0.5} />
+          </mesh>
+        ))}
         {/* East Glass Panes */}
         <mesh position={[-0.05, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <planeGeometry args={[36, 4.2]} />
+          <planeGeometry args={[38, 4.2]} />
           <meshPhysicalMaterial
             color="#E0F2FE"
             transmission={0.9}
@@ -112,7 +161,7 @@ export const OfficeWorld3D: React.FC = () => {
         </mesh>
         {/* Exterior Green Trees Backdrop */}
         <mesh position={[0.6, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <planeGeometry args={[38, 6]} />
+          <planeGeometry args={[40, 6]} />
           <meshBasicMaterial color="#BADCC4" />
         </mesh>
       </group>
@@ -120,7 +169,7 @@ export const OfficeWorld3D: React.FC = () => {
       {/* West Low Wall & Planter Terrace */}
       <group position={[-19, 0, 0]}>
         <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
-          <boxGeometry args={[0.4, 1.2, 36]} />
+          <boxGeometry args={[0.4, 1.2, 38]} />
           <meshStandardMaterial color="#FAF8F5" roughness={0.6} />
         </mesh>
       </group>
@@ -149,6 +198,18 @@ export const OfficeWorld3D: React.FC = () => {
               />
             </mesh>
           ))}
+        </group>
+
+        {/* Studio Brand Entrance Plaque */}
+        <group position={[0, 3.2, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[4.2, 0.5, 0.06]} />
+            <meshStandardMaterial color="#FAF8F5" roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0, 0.035]}>
+            <planeGeometry args={[4.1, 0.44]} />
+            <meshBasicMaterial map={studioBrandTex} />
+          </mesh>
         </group>
 
         {/* Entrance Door Frame */}
@@ -227,17 +288,25 @@ export const OfficeWorld3D: React.FC = () => {
         isWaving={false}
       />
 
-      {/* Potted trees flanking the reception desk */}
-      <ArchitecturalPlant position={[-5.8, 0, 7.8]} scale={1.25} planterType="brass" />
-      <ArchitecturalPlant position={[-0.2, 0, 6.8]} scale={1.15} planterType="terracotta" />
+      {/* Potted plants flanking the reception desk */}
+      <ArchitecturalPlant position={[-5.8, 0, 7.8]} scale={1.25} planterType="brass" plantType="monstera" />
+      <ArchitecturalPlant position={[-0.2, 0, 6.8]} scale={1.15} planterType="terracotta" plantType="ficus" />
+
+      {/* Planter Box Divider between reception walkway and skills area */}
+      <PlanterDividerBox position={[-4.5, 0, 1.5]} rotation={[0, Math.PI / 2, 0]} length={4.5} />
 
       {/* =========================================================================
           5. RECEPTION LOUNGE AREA (Round Rug, Cream Sofa, 4 Armchairs, Coffee Table)
          ========================================================================= */}
       <ReceptionLoungeArea position={[5.2, 0, 8.2]} />
       {/* Large Potted Trees around the lounge circle */}
-      <ArchitecturalPlant position={[9.2, 0, 8.5]} scale={1.3} planterType="terracotta" />
-      <ArchitecturalPlant position={[5.2, 0, 12.2]} scale={1.1} planterType="brass" />
+      <ArchitecturalPlant position={[9.2, 0, 8.5]} scale={1.3} planterType="terracotta" plantType="monstera" />
+      <ArchitecturalPlant position={[5.2, 0, 12.2]} scale={1.1} planterType="brass" plantType="ficus" />
+
+      {/* Overhead Minimalist Lighting Pendants */}
+      <OverheadCeilingPendants position={[-3, 4.8, 7.5]} radius={0.8} />
+      <OverheadCeilingPendants position={[5.2, 4.8, 8.2]} radius={1.0} />
+      <OverheadCeilingPendants position={[-11, 4.8, -1]} radius={1.1} />
 
       {/* =========================================================================
           6. SKILLS DEPARTMENT (5 Sage-Green Pods in West Wing)
@@ -263,40 +332,64 @@ export const OfficeWorld3D: React.FC = () => {
           <meshStandardMaterial color="#C19A6B" roughness={0.4} />
         </mesh>
 
-        {/* Overhead Signboard ("HR / Education") */}
-        <group position={[0, 3.15, -1.72]}>
+        {/* Overhead Signboard ("HR & EDUCATION") */}
+        <group position={[0, 3.22, -1.72]}>
           <mesh castShadow>
-            <boxGeometry args={[2.2, 0.36, 0.04]} />
+            <boxGeometry args={[2.8, 0.42, 0.04]} />
             <meshStandardMaterial color="#FAF8F5" roughness={0.2} />
           </mesh>
           <mesh position={[0, 0, 0.022]}>
-            <planeGeometry args={[2.12, 0.28]} />
-            <meshBasicMaterial color="#FFFFFF" />
+            <planeGeometry args={[2.7, 0.38]} />
+            <meshBasicMaterial map={hrSignTex} />
           </mesh>
         </group>
 
         {/* Framed Diplomas on the Sage-Green Wall */}
-        {[-1.2, 0, 1.2].map((x, i) => (
-          <group key={i} position={[x, 2.2, -1.72]}>
-            <mesh castShadow>
-              <boxGeometry args={[0.5, 0.62, 0.03]} />
-              <meshStandardMaterial color="#A07248" />
-            </mesh>
-            <mesh position={[0, 0, 0.018]}>
-              <planeGeometry args={[0.44, 0.56]} />
-              <meshStandardMaterial color="#FAF8F5" roughness={0.7} />
-            </mesh>
-          </group>
-        ))}
+        {[-1.3, 0, 1.3].map((x, i) => {
+          const qual = i === 0 ? 'B.S. Software Engineering' : i === 1 ? 'AWS Solutions Architect' : 'Scrum Master';
+          const issuer = i === 0 ? 'University of Karachi' : i === 1 ? 'Amazon Web Services' : 'Scrum Alliance';
+          const year = i === 0 ? '2019' : i === 1 ? '2023' : '2022';
+          const certTex = createDiplomaTexture(qual, issuer, year);
+
+          return (
+            <group key={i} position={[x, 2.2, -1.72]}>
+              <mesh castShadow>
+                <boxGeometry args={[0.54, 0.68, 0.03]} />
+                <meshStandardMaterial color="#A07248" />
+              </mesh>
+              <mesh position={[0, 0, 0.018]}>
+                <planeGeometry args={[0.48, 0.62]} />
+                <meshBasicMaterial map={certTex} />
+              </mesh>
+            </group>
+          );
+        })}
 
         {/* HR Desk & Seated Characters (HR Officer in purple suit + Candidate in blue on yellow chair) */}
-        <NaturalWoodDesk position={[0, 0, -0.6]} chairColor="#9333EA" />
+        <DetailedWorkstationDesk position={[0, 0, -0.6]} chairColor="#9333EA" />
         <StylizedCharacter
           position={[0, 0, 0.1]}
           role="hr"
           isSeated={true}
           isWaving={currentScene === 'education'}
         />
+        {/* Candidate / Employee in blue suit seated opposite HR desk on yellow chair */}
+        <group position={[0, 0, -1.3]} rotation={[0, 0, 0]}>
+          <mesh position={[0, 0.38, 0]} castShadow>
+            <boxGeometry args={[0.5, 0.08, 0.48]} />
+            <meshStandardMaterial color="#E5A93C" roughness={0.7} />
+          </mesh>
+          <mesh position={[0, 0.74, 0.22]} castShadow>
+            <boxGeometry args={[0.46, 0.58, 0.05]} />
+            <meshStandardMaterial color="#E5A93C" roughness={0.7} />
+          </mesh>
+          <StylizedCharacter
+            position={[0, 0, 0]}
+            role="visitor"
+            isSeated={true}
+            isWaving={false}
+          />
+        </group>
 
         {/* Tall Wooden Bookcase filled with colorful books (right behind desk) */}
         <group position={[2.6, 0, -0.6]}>
@@ -316,7 +409,7 @@ export const OfficeWorld3D: React.FC = () => {
           ))}
         </group>
 
-        <ArchitecturalPlant position={[-2.4, 0, -0.5]} scale={1.1} planterType="brass" />
+        <ArchitecturalPlant position={[-2.4, 0, -0.5]} scale={1.1} planterType="brass" plantType="snake" />
       </group>
 
       {/* =========================================================================
@@ -349,6 +442,18 @@ export const OfficeWorld3D: React.FC = () => {
           <meshStandardMaterial color="#B8860B" roughness={0.4} />
         </mesh>
 
+        {/* Executive Suite Frosted Sign Plaque */}
+        <group position={[-4.42, 2.4, 1.5]} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[1.8, 0.45, 0.04]} />
+            <meshStandardMaterial color="#FAF8F5" roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0, 0.022]}>
+            <planeGeometry args={[1.72, 0.4]} />
+            <meshBasicMaterial map={ceoSuitSignTex} />
+          </mesh>
+        </group>
+
         {/* Large Walnut Executive Desk (matching reference image) */}
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0.78, 0]} castShadow receiveShadow>
@@ -364,11 +469,23 @@ export const OfficeWorld3D: React.FC = () => {
             <meshStandardMaterial color="#FAF8F5" roughness={0.4} />
           </mesh>
 
-          {/* Laptop, Desk Lamp & Accessories */}
-          <mesh position={[-0.1, 0.84, 0]} castShadow>
-            <boxGeometry args={[0.55, 0.02, 0.38]} />
-            <meshStandardMaterial color="#94A3B8" metalness={0.8} />
-          </mesh>
+          {/* Open Laptop with illuminated screen & metrics */}
+          <group position={[-0.1, 0.84, 0]}>
+            <mesh position={[0, 0.01, 0]} castShadow>
+              <boxGeometry args={[0.55, 0.02, 0.38]} />
+              <meshStandardMaterial color="#94A3B8" metalness={0.8} />
+            </mesh>
+            <group position={[0, 0.02, -0.19]} rotation={[-0.2, 0, 0]}>
+              <mesh position={[0, 0.18, 0]} castShadow>
+                <boxGeometry args={[0.55, 0.36, 0.02]} />
+                <meshStandardMaterial color="#1E293B" metalness={0.8} />
+              </mesh>
+              <mesh position={[0, 0.18, 0.012]}>
+                <planeGeometry args={[0.52, 0.32]} />
+                <meshBasicMaterial map={laptopScreenTex} />
+              </mesh>
+            </group>
+          </group>
         </group>
 
         {/* Executive High-Back Chair */}
@@ -419,8 +536,8 @@ export const OfficeWorld3D: React.FC = () => {
           <meshStandardMaterial color="#7A4E2D" roughness={0.4} />
         </mesh>
 
-        <ArchitecturalPlant position={[-2.8, 0, 0]} scale={1.3} planterType="brass" />
-        <ArchitecturalPlant position={[2.8, 0, 0]} scale={1.3} planterType="terracotta" />
+        <ArchitecturalPlant position={[-2.8, 0, 0]} scale={1.3} planterType="brass" plantType="monstera" />
+        <ArchitecturalPlant position={[2.8, 0, 0]} scale={1.3} planterType="terracotta" plantType="ficus" />
       </group>
     </group>
   );

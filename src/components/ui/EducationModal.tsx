@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOffice } from '../../context/OfficeContext';
 import { EDUCATION_ITEMS } from '../../data/portfolioData';
 import {
@@ -10,9 +10,17 @@ import {
   School,
   ExternalLink,
 } from 'lucide-react';
+import { CharacterPortrait } from './CharacterPortrait';
 
 export const EducationModal: React.FC = () => {
-  const { currentScene, isTransitioning, returnToReception } = useOffice();
+  const { currentScene, isTransitioning, closeActiveModal, returnToReception } = useOffice();
+  const [isSpeaking, setIsSpeaking] = useState(true);
+
+  useEffect(() => {
+    setIsSpeaking(true);
+    const timer = setTimeout(() => setIsSpeaking(false), 4500);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (currentScene !== 'education' || isTransitioning) {
     return null;
@@ -38,42 +46,38 @@ export const EducationModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-labelledby="education-modal-title"
-      className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-stone-900/30 backdrop-blur-xs select-none"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-stone-900/35 backdrop-blur-xs select-none"
     >
-      <div className="w-full max-w-3xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-3xl bg-[#FDFCF9]/98 border border-[#E7DFD3] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         <button
-          onClick={returnToReception}
-          aria-label="Close education dossier and return to reception"
+          onClick={closeActiveModal}
+          aria-label="Close education dossier"
           className="absolute top-5 right-5 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 uppercase tracking-wider mb-1">
-            <GraduationCap className="w-4 h-4" />
-            <span>HR Records & Academic Credentials</span>
-          </div>
-          <h2 id="education-modal-title" className="text-2xl font-bold text-stone-900 tracking-tight">
-            Education & Learning Milestones
+        {/* Character Portrait of Marcus (HR Specialist) */}
+        <CharacterPortrait
+          avatarType="hr"
+          name="Marcus Vance"
+          role="Talent & Engineering Lead"
+          isSpeaking={isSpeaking}
+        />
+
+        <div className="my-5">
+          <h2 id="education-modal-title" className="text-xl font-bold text-stone-900 tracking-tight">
+            Academic Background & Engineering Credentials
           </h2>
           <p className="text-xs text-stone-600 mt-1">
-            Certified academic background, engineering degrees, and leadership training programs.
-          </p>
-        </div>
-
-        {/* HR Specialist Welcome Note (purple blazer style) */}
-        <div className="p-4 bg-purple-50/70 border border-purple-200/80 rounded-xl mb-6 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-4 h-4" />
-          </div>
-          <p className="text-xs text-purple-950 leading-relaxed font-medium">
-            &ldquo;Hello! As part of People & Talent, here is the verified educational timeline and technical foundations for Nauman Ansari.&rdquo;
+            &ldquo;Here is the verified curriculum, academic foundation, and ongoing continuous learning achievements for Nauman Ansari.&rdquo;
           </p>
         </div>
 
         {/* Interactive Timeline */}
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {EDUCATION_ITEMS.map((item) => {
             const Icon = getCategoryIcon(item.category);
             return (
@@ -120,7 +124,12 @@ export const EducationModal: React.FC = () => {
 
         {/* Footer Navigation */}
         <div className="mt-8 pt-4 border-t border-[#EBE3D7] flex items-center justify-between">
-          <span className="text-xs text-stone-500">All credentials verified and archived</span>
+          <button
+            onClick={closeActiveModal}
+            className="px-4 py-2 text-xs font-semibold text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl transition-colors cursor-pointer"
+          >
+            Close & Explore Room
+          </button>
           <button
             onClick={returnToReception}
             className="px-4 py-2 text-xs font-semibold text-white bg-[#4D6B53] hover:bg-[#3E5843] rounded-xl transition-colors cursor-pointer shadow-xs"

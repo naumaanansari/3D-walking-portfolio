@@ -21,9 +21,10 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
+  const leftArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  // Palette matched exactly to reference image
+  // Character Color Schemes exactly matched to reference image
   let suitColor = '#1E293B';
   let shirtColor = '#F8FAFC';
   let skinTone = '#E6BA95';
@@ -77,13 +78,13 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
 
-    // Subtle breathing
+    // Natural breathing motion
     if (groupRef.current) {
       const breatheOffset = Math.sin(t * 2.2) * 0.015;
       groupRef.current.position.y = position[1] + breatheOffset;
     }
 
-    // Arm gesture
+    // Arm gesture / waving / typing
     if (rightArmRef.current) {
       if (isWaving && (role === 'receptionist' || role === 'nauman')) {
         if (role === 'receptionist') {
@@ -94,29 +95,32 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
           rightArmRef.current.rotation.y = Math.sin(t * 2) * 0.08;
         }
       } else if (isSeated) {
-        // Typing / resting on desk
-        rightArmRef.current.rotation.x = -Math.PI / 3 + Math.sin(t * 3.5) * 0.05;
-        rightArmRef.current.rotation.z = -0.15;
+        // Typing motion
+        rightArmRef.current.rotation.x = -Math.PI / 2.8 + Math.sin(t * 4) * 0.04;
+        rightArmRef.current.rotation.z = -0.12;
       }
     }
 
-    // Head subtle movement
+    if (leftArmRef.current && isSeated) {
+      leftArmRef.current.rotation.x = -Math.PI / 2.8 + Math.cos(t * 4) * 0.04;
+      leftArmRef.current.rotation.z = 0.12;
+    }
+
+    // Subtle head tracking
     if (headRef.current) {
       headRef.current.rotation.y = Math.sin(t * 1.4) * 0.08;
     }
   });
 
-  const seatYOffset = isSeated ? -0.35 : 0;
-
   return (
     <group ref={groupRef} position={position} rotation={rotation} scale={[scale, scale, scale]}>
       {/* Soft Contact Shadow */}
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.36, 24]} />
-        <meshBasicMaterial color="#78716C" opacity={0.25} transparent />
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.38, 20]} />
+        <meshBasicMaterial color="#57534E" opacity={0.25} transparent />
       </mesh>
 
-      {/* Legs */}
+      {/* Legs & Shoes */}
       {!isSeated ? (
         <group position={[0, 0, 0]}>
           <mesh position={[-0.11, 0.45, 0]} castShadow>
@@ -127,13 +131,14 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
             <boxGeometry args={[0.13, 0.9, 0.14]} />
             <meshStandardMaterial color="#334155" roughness={0.7} />
           </mesh>
+          {/* Polished Dress Shoes */}
           <mesh position={[-0.11, 0.05, 0.03]} castShadow>
             <boxGeometry args={[0.13, 0.1, 0.2]} />
-            <meshStandardMaterial color="#1E293B" roughness={0.4} />
+            <meshStandardMaterial color="#0F172A" roughness={0.3} metalness={0.2} />
           </mesh>
           <mesh position={[0.11, 0.05, 0.03]} castShadow>
             <boxGeometry args={[0.13, 0.1, 0.2]} />
-            <meshStandardMaterial color="#1E293B" roughness={0.4} />
+            <meshStandardMaterial color="#0F172A" roughness={0.3} metalness={0.2} />
           </mesh>
         </group>
       ) : (
@@ -175,13 +180,16 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
         {role === 'nauman' && (
           <mesh position={[0, 0.1, 0.14]}>
             <boxGeometry args={[0.07, 0.32, 0.04]} />
-            <meshStandardMaterial color="#0284C7" />
+            <meshStandardMaterial color="#0284C7" metalness={0.3} />
           </mesh>
         )}
       </group>
 
       {/* Left Arm */}
-      <group position={[-0.26, (isSeated ? 0.8 : 1.25) + 0.24, 0]}>
+      <group
+        ref={leftArmRef}
+        position={[-0.26, (isSeated ? 0.8 : 1.25) + 0.24, 0]}
+      >
         <mesh
           position={[0, isSeated ? 0 : -0.25, isSeated ? 0.15 : 0]}
           rotation={isSeated ? [-Math.PI / 3, 0, 0.15] : [0, 0, 0]}
@@ -190,16 +198,29 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
           <boxGeometry args={[0.11, 0.52, 0.11]} />
           <meshStandardMaterial color={suitColor} roughness={0.6} />
         </mesh>
+        {/* Modeled Left Hand */}
+        <mesh position={[0, isSeated ? -0.25 : -0.54, isSeated ? 0.28 : 0]} castShadow>
+          <boxGeometry args={[0.09, 0.08, 0.07]} />
+          <meshStandardMaterial color={skinTone} roughness={0.8} />
+        </mesh>
       </group>
 
       {/* Right Arm */}
-      <group ref={rightArmRef} position={[0.26, (isSeated ? 0.8 : 1.25) + 0.24, 0]}>
-        <mesh position={[0, -0.25, 0]} castShadow>
+      <group
+        ref={rightArmRef}
+        position={[0.26, (isSeated ? 0.8 : 1.25) + 0.24, 0]}
+      >
+        <mesh
+          position={[0, isSeated ? 0 : -0.25, isSeated ? 0.15 : 0]}
+          rotation={isSeated ? [-Math.PI / 3, 0, -0.15] : [0, 0, 0]}
+          castShadow
+        >
           <boxGeometry args={[0.11, 0.52, 0.11]} />
           <meshStandardMaterial color={suitColor} roughness={0.6} />
         </mesh>
-        <mesh position={[0, -0.54, 0]}>
-          <sphereGeometry args={[0.065, 8, 8]} />
+        {/* Modeled Right Hand */}
+        <mesh position={[0, isSeated ? -0.25 : -0.54, isSeated ? 0.28 : 0]} castShadow>
+          <boxGeometry args={[0.09, 0.08, 0.07]} />
           <meshStandardMaterial color={skinTone} roughness={0.8} />
         </mesh>
       </group>
@@ -208,7 +229,7 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
       <group ref={headRef} position={[0, (isSeated ? 0.8 : 1.25) + 0.5, 0]}>
         {/* Neck */}
         <mesh position={[0, -0.08, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.1, 8]} />
+          <cylinderGeometry args={[0.08, 0.08, 0.1, 10]} />
           <meshStandardMaterial color={skinTone} roughness={0.8} />
         </mesh>
 
@@ -218,32 +239,50 @@ export const StylizedCharacter: React.FC<CharacterProps> = ({
           <meshStandardMaterial color={skinTone} roughness={0.8} />
         </mesh>
 
-        {/* Hair */}
+        {/* Hair with Stylized Volume */}
         <mesh position={[0, 0.2, -0.01]} castShadow>
           <boxGeometry args={[0.31, 0.16, 0.3]} />
           <meshStandardMaterial color={hairColor} roughness={0.9} />
         </mesh>
         {role === 'receptionist' && (
-          <mesh position={[0, 0.14, -0.18]}>
-            <sphereGeometry args={[0.1, 12, 12]} />
+          // Bun hairstyle
+          <mesh position={[0, 0.14, -0.18]} castShadow>
+            <sphereGeometry args={[0.1, 16, 16]} />
             <meshStandardMaterial color={hairColor} roughness={0.9} />
           </mesh>
         )}
 
+        {/* Facial Details: Eyes */}
+        <group position={[0, 0.08, 0.134]}>
+          <mesh position={[-0.07, 0, 0]}>
+            <circleGeometry args={[0.025, 8]} />
+            <meshBasicMaterial color="#1E293B" />
+          </mesh>
+          <mesh position={[0.07, 0, 0]}>
+            <circleGeometry args={[0.025, 8]} />
+            <meshBasicMaterial color="#1E293B" />
+          </mesh>
+          {/* Friendly Smile */}
+          <mesh position={[0, -0.05, 0]}>
+            <boxGeometry args={[0.07, 0.016, 0.005]} />
+            <meshBasicMaterial color="#BE123C" />
+          </mesh>
+        </group>
+
         {/* Glasses for Nauman */}
         {role === 'nauman' && (
-          <group position={[0, 0.07, 0.14]}>
+          <group position={[0, 0.08, 0.145]}>
             <mesh position={[-0.07, 0, 0]}>
-              <ringGeometry args={[0.035, 0.048, 12]} />
-              <meshBasicMaterial color="#1E293B" side={THREE.DoubleSide} />
+              <ringGeometry args={[0.035, 0.048, 16]} />
+              <meshBasicMaterial color="#0F172A" side={THREE.DoubleSide} />
             </mesh>
             <mesh position={[0.07, 0, 0]}>
-              <ringGeometry args={[0.035, 0.048, 12]} />
-              <meshBasicMaterial color="#1E293B" side={THREE.DoubleSide} />
+              <ringGeometry args={[0.035, 0.048, 16]} />
+              <meshBasicMaterial color="#0F172A" side={THREE.DoubleSide} />
             </mesh>
             <mesh position={[0, 0.015, 0]}>
               <boxGeometry args={[0.05, 0.012, 0.01]} />
-              <meshBasicMaterial color="#1E293B" />
+              <meshBasicMaterial color="#0F172A" />
             </mesh>
           </group>
         )}

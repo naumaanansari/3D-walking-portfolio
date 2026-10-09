@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FEEDBACK_ITEMS } from '../../data/portfolioData';
 import { useOffice } from '../../context/OfficeContext';
 import { FeedbackItem } from '../../types/office';
 import { ArchitecturalPlant } from './OfficeFurniture';
+import { createSignTexture } from '../../utils/textureGenerator';
 
 // Interactive Feedback Sticky Card on Sage-Green Wall
 const FeedbackCardMesh: React.FC<{
@@ -24,9 +25,13 @@ const FeedbackCardMesh: React.FC<{
       }}
       onPointerOver={(e) => {
         e.stopPropagation();
+        document.body.style.cursor = 'pointer';
         onPointerOver();
       }}
-      onPointerOut={onPointerOut}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+        onPointerOut();
+      }}
     >
       {/* Note Card Paper */}
       <mesh position={[0, 0, 0.02]} castShadow>
@@ -82,6 +87,11 @@ export const FeedbackBoard3D: React.FC<{
 
   const stickyColors = ['#FEF08A', '#BBF7D0', '#BAE6FD', '#FBCFE8'];
 
+  const signTex = useMemo(
+    () => createSignTexture('FEEDBACK & ENDORSEMENTS', 'Colleague Notes · Click to Read', '#FAF8F5', '#1E293B', '#4D6B53'),
+    []
+  );
+
   return (
     <group position={position}>
       {/* Sage-Green Multi-Panel Acoustic Wall with Rounded Top & Oak Trim */}
@@ -97,14 +107,14 @@ export const FeedbackBoard3D: React.FC<{
       </mesh>
 
       {/* White Overhead Signboard Plaque ("Feedback") */}
-      <group position={[0, 3.15, 0.08]}>
+      <group position={[0, 3.22, 0.08]}>
         <mesh castShadow>
-          <boxGeometry args={[2.0, 0.36, 0.04]} />
+          <boxGeometry args={[3.2, 0.42, 0.05]} />
           <meshStandardMaterial color="#FAF8F5" roughness={0.2} />
         </mesh>
-        <mesh position={[0, 0, 0.022]}>
-          <planeGeometry args={[1.92, 0.28]} />
-          <meshBasicMaterial color="#FFFFFF" />
+        <mesh position={[0, 0, 0.03]}>
+          <planeGeometry args={[3.1, 0.38]} />
+          <meshBasicMaterial map={signTex} />
         </mesh>
       </group>
 
@@ -169,7 +179,7 @@ export const FeedbackBoard3D: React.FC<{
       </group>
 
       {/* Architectural Potted Plant beside Wall */}
-      <ArchitecturalPlant position={[2.8, 0, 0.5]} scale={1.15} planterType="terracotta" />
+      <ArchitecturalPlant position={[2.8, 0, 0.5]} scale={1.15} planterType="terracotta" plantType="ficus" />
     </group>
   );
 };
